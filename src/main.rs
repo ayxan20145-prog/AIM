@@ -2,40 +2,42 @@ use crossterm::{
     cursor::MoveTo,
     event::{self, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
 use std::io::{self, stdout};
 
+struct Cursor {
+    x: u16,
+    y: u16,
+}
+
 fn main() -> io::Result<()> {
-    let mut x: u16 = 0;
-    let mut y: u16 = 0;
+    let mut cursor = Cursor { x: 0, y: 0 };
+
+    execute!(stdout(), Clear(ClearType::All))?;
 
     enable_raw_mode()?;
 
     loop {
-        execute!(stdout(), MoveTo(x, y))?;
+        execute!(stdout(), MoveTo(cursor.x, cursor.y))?;
 
         if let Event::Key(key) = event::read()? {
             match key.code {
                 KeyCode::Char('h') => {
-                    if x == 0 {
-                        continue;
-                    } else {
-                        x -= 1;
+                    if cursor.x > 0 {
+                        cursor.x -= 1;
                     }
                 }
 
-                KeyCode::Char('j') => y += 1,
+                KeyCode::Char('j') => cursor.y += 1,
 
                 KeyCode::Char('k') => {
-                    if y == 0 {
-                        continue;
-                    } else {
-                        y -= 1;
+                    if cursor.y > 0 {
+                        cursor.y -= 1;
                     }
                 }
 
-                KeyCode::Char('l') => x += 1,
+                KeyCode::Char('l') => cursor.x += 1,
 
                 KeyCode::Char('q') => break,
 
