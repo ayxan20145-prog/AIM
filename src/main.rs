@@ -10,9 +10,9 @@ fn main() -> io::Result<()> {
     let mut x: u16 = 0;
     let mut y: u16 = 0;
 
-    loop {
-        enable_raw_mode()?;
+    enable_raw_mode()?;
 
+    loop {
         execute!(stdout(), MoveTo(x, y))?;
 
         if let Event::Key(key) = event::read()? {
@@ -25,6 +25,8 @@ fn main() -> io::Result<()> {
                     }
                 }
 
+                KeyCode::Char('j') => y += 1,
+
                 KeyCode::Char('k') => {
                     if y == 0 {
                         continue;
@@ -33,8 +35,6 @@ fn main() -> io::Result<()> {
                     }
                 }
 
-                KeyCode::Char('j') => y += 1,
-
                 KeyCode::Char('l') => x += 1,
 
                 KeyCode::Char('q') => break,
@@ -42,9 +42,9 @@ fn main() -> io::Result<()> {
                 _ => {}
             }
         }
-
-        disable_raw_mode()?;
     }
+
+    disable_raw_mode()?;
 
     Ok(())
 }
