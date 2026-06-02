@@ -11,37 +11,76 @@ struct Cursor {
     y: u16,
 }
 
+enum Mode {
+    Normal,
+    Insert,
+}
+
+struct Editor {
+    cursor: Cursor,
+    mode: Mode,
+}
+
 fn main() -> io::Result<()> {
-    let mut cursor = Cursor { x: 0, y: 0 };
+    let mut editor = Editor {
+        cursor: Cursor { x: 0, y: 0 },
+        mode: Mode::Normal,
+    };
 
     execute!(stdout(), Clear(ClearType::All))?;
 
     enable_raw_mode()?;
 
     loop {
-        execute!(stdout(), MoveTo(cursor.x, cursor.y))?;
+        execute!(stdout(), MoveTo(editor.cursor.x, editor.cursor.y))?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('h') => {
-                    if cursor.x > 0 {
-                        cursor.x -= 1;
+            match editor.mode {
+                Mode::Normal => match key.code {
+                    KeyCode::Char('h') | KeyCode::Left => {
+                        if editor.cursor.x > 0 {
+                            editor.cursor.x -= 1;
+                        }
                     }
-                }
 
-                KeyCode::Char('j') => cursor.y += 1,
+                    KeyCode::Char('j') | KeyCode::Down => editor.cursor.y += 1,
 
-                KeyCode::Char('k') => {
-                    if cursor.y > 0 {
-                        cursor.y -= 1;
+                    KeyCode::Char('k') | KeyCode::Up => {
+                        if editor.cursor.y > 0 {
+                            editor.cursor.y -= 1;
+                        }
                     }
-                }
 
-                KeyCode::Char('l') => cursor.x += 1,
+                    KeyCode::Char('l') | KeyCode::Right => editor.cursor.x += 1,
 
-                KeyCode::Char('q') => break,
+                    KeyCode::Char('i') => editor.mode = Mode::Insert,
 
-                _ => {}
+                    KeyCode::Char('q') => break,
+
+                    _ => {}
+                },
+
+                Mode::Insert => match key.code {
+                    KeyCode::Left => {
+                        if editor.cursor.x > 0 {
+                            editor.cursor.x -= 1;
+                        }
+                    }
+
+                    KeyCode::Down => editor.cursor.y += 1,
+
+                    KeyCode::Up => {
+                        if editor.cursor.y > 0 {
+                            editor.cursor.y -= 1;
+                        }
+                    }
+
+                    KeyCode::Right => editor.cursor.x += 1,
+
+                    KeyCode::Esc => editor.mode = Mode::Normal,
+
+                    _ => {}
+                },
             }
         }
     }
