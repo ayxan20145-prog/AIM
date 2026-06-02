@@ -129,6 +129,11 @@ fn main() -> io::Result<()> {
                         }
                     }
 
+                    KeyCode::Enter => {
+                        editor.cursor.y++;
+                        editor.cursor.x = 0;
+                    }
+
                     KeyCode::Esc => editor.mode = Mode::Normal,
 
                     _ => {}
