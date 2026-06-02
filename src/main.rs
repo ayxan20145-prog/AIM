@@ -2,7 +2,7 @@ use crossterm::{
     cursor::MoveTo,
     event::{self, Event, KeyCode},
     execute,
-    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size},
 };
 use std::io::{self, stdout};
 
@@ -32,6 +32,16 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
 
     loop {
+        let (_, rows) = size()?;
+
+        let mode_text = match editor.mode {
+            Mode::Normal => "-- NORMAL --",
+            Mode::Insert => "-- INSERT --",
+        };
+
+        execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
+
+        print!("{}", mode_text);
         execute!(stdout(), MoveTo(editor.cursor.x, editor.cursor.y))?;
 
         if let Event::Key(key) = event::read()? {
