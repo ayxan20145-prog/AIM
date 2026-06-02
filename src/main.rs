@@ -130,7 +130,7 @@ fn main() -> io::Result<()> {
                     }
 
                     KeyCode::Enter => {
-                        editor.cursor.y++;
+                        editor.cursor.y += 1;
                         editor.cursor.x = 0;
                     }
 
