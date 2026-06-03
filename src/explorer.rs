@@ -4,7 +4,7 @@ use crossterm::{
     event::{self, Event, KeyCode},
     execute,
     style::Print,
-    terminal::{Clear, ClearType, disable_raw_mode}
+    terminal::{Clear, ClearType, disable_raw_mode},
 };
 use std::fs;
 use std::io::{self, Write};
@@ -15,7 +15,6 @@ use std::time::Duration;
 use std::{env, process::Command};
 
 pub fn run() -> io::Result<Option<std::path::PathBuf>> {
-
     let mut stdout = io::stdout();
     execute!(stdout, Hide, Clear(ClearType::All))?;
 

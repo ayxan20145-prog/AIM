@@ -4,10 +4,10 @@ use crossterm::{
     cursor::MoveTo,
     event::{self, Event, KeyCode},
     execute,
-    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled,size},
 };
 use std::io::{self, Write, stdout};
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 pub struct Cursor {
     x: u16,
@@ -17,6 +17,7 @@ pub struct Cursor {
 pub enum Mode {
     Normal,
     Insert,
+    Open,
 }
 
 pub struct Editor {
@@ -36,15 +37,17 @@ pub fn run() -> io::Result<()> {
 
     execute!(stdout(), Clear(ClearType::All))?;
 
-
     loop {
-        enable_raw_mode()?;
+        if !is_raw_mode_enabled()? {
+            enable_raw_mode()?;
+        }
 
         let (_, rows) = size()?;
 
         let mode_text = match editor.mode {
             Mode::Normal => "-- NORMAL --",
             Mode::Insert => "-- INSERT --",
+            Mode::Open => "-- OPEN --",
         };
 
         execute!(stdout(), Clear(ClearType::All))?;
@@ -79,6 +82,8 @@ pub fn run() -> io::Result<()> {
                 }
 
                 KeyCode::Right => editor.cursor.x += 1,
+                    
+                KeyCode::Esc => editor.mode = Mode::Normal,
 
                 _ => {}
             }
@@ -102,14 +107,7 @@ pub fn run() -> io::Result<()> {
 
                     KeyCode::Char('i') => editor.mode = Mode::Insert,
 
-                    KeyCode::Char('e') => {
-                        if let Some(path) = explorer::run()? {
-                            editor.lines = open_file(&path)?;
-                            editor.file_path = Some(path);
-                            editor.cursor.x = 0;
-                            editor.cursor.y = 0;
-                        }
-                    }
+                    KeyCode::Char(' ') => editor.mode = Mode::Open,
 
                     KeyCode::Char('q') => break,
 
@@ -149,7 +147,18 @@ pub fn run() -> io::Result<()> {
                         editor.cursor.x = 0;
                     }
 
-                    KeyCode::Esc => editor.mode = Mode::Normal,
+                    _ => {}
+                },
+                Mode::Open => match key.code {
+                    KeyCode::Char('e') => {
+                        if let Some(path) = explorer::run()? {
+                            editor.lines = open_file(&path)?;
+                            editor.file_path = Some(path);
+                            editor.cursor.x = 0;
+                            editor.cursor.y = 0;
+                        }
+                        editor.mode = Mode::Normal;
+                    }
 
                     _ => {}
                 },
