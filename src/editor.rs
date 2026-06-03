@@ -27,6 +27,20 @@ pub struct Editor {
     file_path: Option<PathBuf>,
 }
 
+impl Editor {
+    fn clamp_cursor(&mut self) {
+        if self.cursor.y as usize >= self.lines.len() {
+            self.cursor.y = (self.lines.len().saturating_sub(1)) as u16;
+        }
+
+        let line_len = self.lines.get(self.cursor.y as usize).map(|l| l.len()).unwrap_or(0);
+
+        if self.cursor.x as usize > line_len {
+            self.cursor.x = line_len as u16;
+        }
+    }
+}
+
 pub fn run() -> io::Result<()> {
     let mut editor = Editor {
         cursor: Cursor { x: 0, y: 0 },
@@ -43,6 +57,8 @@ pub fn run() -> io::Result<()> {
         }
 
         let (_, rows) = size()?;
+
+        editor.clamp_cursor();
 
         let mode_text = match editor.mode {
             Mode::Normal => "-- NORMAL --",
@@ -67,45 +83,31 @@ pub fn run() -> io::Result<()> {
 
         if let Event::Key(key) = event::read()? {
             match key.code {
-                KeyCode::Left => {
+                KeyCode::Delete | KeyCode::Left => {
                     if editor.cursor.x > 0 {
                         editor.cursor.x -= 1;
                     }
                 }
 
-                KeyCode::Down => editor.cursor.y += 1,
+                KeyCode::End | KeyCode::Down => editor.cursor.y += 1,
 
-                KeyCode::Up => {
+                KeyCode::Home | KeyCode::Up => {
                     if editor.cursor.y > 0 {
                         editor.cursor.y -= 1;
                     }
                 }
 
-                KeyCode::Right => editor.cursor.x += 1,
+                KeyCode::PageDown | KeyCode::Right => editor.cursor.x += 1,
                     
-                KeyCode::Esc => editor.mode = Mode::Normal,
+                KeyCode::PageUp => editor.mode = Mode::Normal,
 
                 _ => {}
             }
+            editor.clamp_cursor();
+
             match editor.mode {
                 Mode::Normal => match key.code {
-                    KeyCode::Char('h') => {
-                        if editor.cursor.x > 0 {
-                            editor.cursor.x -= 1;
-                        }
-                    }
-
-                    KeyCode::Char('j') => editor.cursor.y += 1,
-
-                    KeyCode::Char('k') => {
-                        if editor.cursor.y > 0 {
-                            editor.cursor.y -= 1;
-                        }
-                    }
-
-                    KeyCode::Char('l') => editor.cursor.x += 1,
-
-                    KeyCode::Char('i') => editor.mode = Mode::Insert,
+                    KeyCode::Insert => editor.mode = Mode::Insert,
 
                     KeyCode::Char(' ') => editor.mode = Mode::Open,
 
@@ -143,6 +145,19 @@ pub fn run() -> io::Result<()> {
                     }
 
                     KeyCode::Enter => {
+                        let y = editor.cursor.y as usize;
+                        let x = editor.cursor.x as usize;
+
+                        while y >= editor.lines.len() {
+                            editor.lines.push(String::new());
+                        }
+
+                        let current_line = &mut editor.lines[y];
+
+                        let new_line = current_line.split_off(x);
+
+                        editor.lines.insert(y + 1, new_line);
+
                         editor.cursor.y += 1;
                         editor.cursor.x = 0;
                     }

@@ -82,20 +82,20 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
         if event::poll(Duration::from_millis(200))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
-                    KeyCode::Char('j') | KeyCode::Down => {
+                    KeyCode::End | KeyCode::Down => {
                         if selected + 1 < entries_list.len() {
                             selected += 1;
                         }
                     }
-                    KeyCode::Char('k') | KeyCode::Up => {
+                    KeyCode::Home | KeyCode::Up => {
                         if selected > 0 {
                             selected -= 1;
                         }
                     }
-                    KeyCode::Char('h') | KeyCode::Left => {
+                    KeyCode::Delete | KeyCode::Left => {
                         dir.pop();
                     }
-                    KeyCode::Char('l') | KeyCode::Right => {
+                    KeyCode::PageDown | KeyCode::Right => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
                             if *is_dir {
                                 dir = path.clone();
