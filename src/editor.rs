@@ -4,7 +4,7 @@ use crossterm::{
     cursor::MoveTo,
     event::{self, Event, KeyCode},
     execute,
-    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled,size},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
 use std::io::{self, Write, stdout};
 use std::path::{Path, PathBuf};
@@ -33,7 +33,11 @@ impl Editor {
             self.cursor.y = (self.lines.len().saturating_sub(1)) as u16;
         }
 
-        let line_len = self.lines.get(self.cursor.y as usize).map(|l| l.len()).unwrap_or(0);
+        let line_len = self
+            .lines
+            .get(self.cursor.y as usize)
+            .map(|l| l.len())
+            .unwrap_or(0);
 
         if self.cursor.x as usize > line_len {
             self.cursor.x = line_len as u16;
@@ -98,7 +102,7 @@ pub fn run() -> io::Result<()> {
                 }
 
                 KeyCode::PageDown | KeyCode::Right => editor.cursor.x += 1,
-                    
+
                 KeyCode::PageUp => editor.mode = Mode::Normal,
 
                 _ => {}
@@ -137,10 +141,23 @@ pub fn run() -> io::Result<()> {
                         let y = editor.cursor.y as usize;
                         let x = editor.cursor.x as usize;
 
-                        if y < editor.lines.len() && x > 0 {
-                            let line = &mut editor.lines[y];
-                            line.remove(x - 1);
+                        if y >= editor.lines.len() {
+                            return Ok(());
+                        }
+
+                        if x > 0 {
+                            editor.lines[y].remove(x - 1);
                             editor.cursor.x -= 1;
+                        } else if y > 0 {
+                            let current_line = editor.lines.remove(y);
+                            editor.cursor.y -= 1;
+
+                            let prev_line = &mut editor.lines[editor.cursor.y as usize];
+
+                            let prev_len = prev_line.len();
+                            prev_line.push_str(&current_line);
+
+                            editor.cursor.x = prev_len as u16;
                         }
                     }
 
