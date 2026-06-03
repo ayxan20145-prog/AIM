@@ -36,9 +36,10 @@ pub fn run() -> io::Result<()> {
 
     execute!(stdout(), Clear(ClearType::All))?;
 
-    enable_raw_mode()?;
 
     loop {
+        enable_raw_mode()?;
+
         let (_, rows) = size()?;
 
         let mode_text = match editor.mode {
