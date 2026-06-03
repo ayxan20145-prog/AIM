@@ -179,6 +179,22 @@ pub fn run() -> io::Result<()> {
                         editor.cursor.x = 0;
                     }
 
+                    KeyCode::Tab => {
+                        let y = editor.cursor.y as usize;
+
+                        while y >= editor.lines.len() {
+                            editor.lines.push(String::new());
+                        }
+
+                        let line = &mut editor.lines[y];
+
+                        let tab = "    ";
+
+                        line.insert_str(editor.cursor.x as usize, tab);
+
+                        editor.cursor.x += tab.len() as u16;
+                    }
+
                     _ => {}
                 },
                 Mode::Open => match key.code {
