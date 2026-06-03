@@ -4,7 +4,7 @@ use crossterm::{
     event::{self, Event, KeyCode},
     execute,
     style::Print,
-    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
+    terminal::{Clear, ClearType, disable_raw_mode}
 };
 use std::fs;
 use std::io::{self, Write};
@@ -14,8 +14,7 @@ use std::thread;
 use std::time::Duration;
 use std::{env, process::Command};
 
-pub fn run() -> io::Result<()> {
-    enable_raw_mode()?;
+pub fn run() -> io::Result<Option<std::path::PathBuf>> {
 
     let mut stdout = io::stdout();
     execute!(stdout, Hide, Clear(ClearType::All))?;
@@ -106,14 +105,10 @@ pub fn run() -> io::Result<()> {
                         }
                     }
                     KeyCode::Char('a') => {
-                        disable_raw_mode()?;
                         create_dir(&dir)?;
-                        enable_raw_mode()?;
                     }
                     KeyCode::Char('f') => {
-                        disable_raw_mode()?;
                         create_file(&dir)?;
-                        enable_raw_mode()?;
                     }
                     KeyCode::Char('d') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
@@ -122,47 +117,33 @@ pub fn run() -> io::Result<()> {
                     }
                     KeyCode::Char('c') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
-                            disable_raw_mode()?;
                             if *is_dir {
                                 copy_dir(path)?;
                             } else {
                                 copy_file(path)?;
                             }
-                            enable_raw_mode()?;
                         }
                     }
                     KeyCode::Char('m') => {
                         if let Some((path, _is_dir)) = entries_list.get(selected) {
-                            disable_raw_mode()?;
                             movee(path)?;
-                            enable_raw_mode()?;
                         }
                     }
                     KeyCode::Char('r') => {
                         if let Some((path, _is_dir)) = entries_list.get(selected) {
-                            disable_raw_mode()?;
                             rename(path)?;
-                            enable_raw_mode()?;
                         }
                     }
                     KeyCode::Char('.') => {
                         show_hidden = !show_hidden;
                         selected = 0;
                     }
-                    KeyCode::Char('o') => {
+                    KeyCode::Enter => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
                             if !*is_dir {
-                                let file_path = path.clone();
-                                let editor =
-                                    env::var("EDITOR").unwrap_or_else(|_| "nano".to_string());
+                                cleanup(&mut stdout)?;
 
-                                disable_raw_mode()?;
-                                execute!(stdout, Show)?;
-
-                                Command::new(editor).arg(&file_path).status()?;
-
-                                execute!(stdout, Hide, Clear(ClearType::All))?;
-                                enable_raw_mode()?;
+                                return Ok(Some(path.clone()));
                             }
                         }
                     }
@@ -180,24 +161,26 @@ pub fn run() -> io::Result<()> {
                                  m -> Move\r\n\
                                  r -> Rename\r\n\
                                  . -> Toggle hidden\r\n\
-                                 o -> Open in editor\r\n\
+                                 enter -> Open in editor\r\n\
                                  t -> Open terminal here\r\n\
                                  q -> Quit"
                             ))
                         )?;
-                        disable_raw_mode()?;
                         pause();
-                        enable_raw_mode()?;
                     }
-                    KeyCode::Char('q') => break,
+                    KeyCode::Char('q') => {
+                        cleanup(&mut stdout)?;
+                        disable_raw_mode()?;
+                        return Ok(None);
+                    }
                     _ => {}
                 }
             }
         }
     }
-
+}
+pub fn cleanup(stdout: &mut std::io::Stdout) -> io::Result<()> {
     execute!(stdout, Show)?;
-    disable_raw_mode()?;
     Ok(())
 }
 pub fn create_dir(path: &Path) -> io::Result<()> {

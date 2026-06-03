@@ -7,6 +7,7 @@ use crossterm::{
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size},
 };
 use std::io::{self, Write, stdout};
+use std::path::{PathBuf, Path};
 
 pub struct Cursor {
     x: u16,
@@ -22,14 +23,15 @@ pub struct Editor {
     cursor: Cursor,
     mode: Mode,
     lines: Vec<String>,
+    file_path: Option<PathBuf>,
 }
 
 pub fn run() -> io::Result<()> {
-
     let mut editor = Editor {
         cursor: Cursor { x: 0, y: 0 },
         mode: Mode::Normal,
         lines: vec![String::new()],
+        file_path: None,
     };
 
     execute!(stdout(), Clear(ClearType::All))?;
@@ -100,9 +102,12 @@ pub fn run() -> io::Result<()> {
                     KeyCode::Char('i') => editor.mode = Mode::Insert,
 
                     KeyCode::Char('e') => {
-                        disable_raw_mode()?;
-                        explorer::run()?;
-                        enable_raw_mode()?;
+                        if let Some(path) = explorer::run()? {
+                            editor.lines = open_file(&path)?;
+                            editor.file_path = Some(path);
+                            editor.cursor.x = 0;
+                            editor.cursor.y = 0;
+                        }
                     }
 
                     KeyCode::Char('q') => break,
@@ -154,5 +159,8 @@ pub fn run() -> io::Result<()> {
     disable_raw_mode()?;
 
     Ok(())
-
+}
+fn open_file(path: &Path) -> io::Result<Vec<String>> {
+    let content = std::fs::read_to_string(path)?;
+    Ok(content.lines().map(|s| s.to_string()).collect())
 }
