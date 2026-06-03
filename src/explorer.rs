@@ -6,13 +6,13 @@ use crossterm::{
     style::Print,
     terminal::{Clear, ClearType, disable_raw_mode},
 };
+use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
-use std::{env, process::Command};
 
 pub fn run() -> io::Result<Option<std::path::PathBuf>> {
     let mut stdout = io::stdout();
@@ -146,26 +146,22 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
                             }
                         }
                     }
-                    KeyCode::Char('t') => {
-                        open_terminal(&dir);
-                    }
                     KeyCode::Char('?') => {
                         execute!(
                             stdout,
                             Print(format!(
                                 "a -> Create dir\r\n\
                                  f -> Create file\r\n\
-                                 d -> Delte\r\n\
+                                 d -> Delete\r\n\
                                  c -> Copy\r\n\
                                  m -> Move\r\n\
                                  r -> Rename\r\n\
                                  . -> Toggle hidden\r\n\
                                  enter -> Open in editor\r\n\
-                                 t -> Open terminal here\r\n\
                                  q -> Quit"
                             ))
                         )?;
-                        pause();
+                        thread::sleep(Duration::from_secs(2));
                     }
                     KeyCode::Char('q') => {
                         cleanup(&mut stdout)?;
@@ -220,7 +216,7 @@ pub fn create_file(path: &Path) -> io::Result<()> {
         } else {
             println!("Error: file already exists");
         }
-        pause();
+        thread::sleep(Duration::from_secs(1));
         return Ok(());
     }
 
@@ -327,55 +323,4 @@ pub fn rename(path: &Path) -> io::Result<()> {
     fs::rename(path, new_path)?;
 
     Ok(())
-}
-pub fn open_terminal(dir: &Path) {
-    if Command::new("xdg-terminal-exec")
-        .arg("--dir")
-        .arg(dir)
-        .spawn()
-        .is_ok()
-    {
-        return;
-    }
-    if Command::new("ptyxis")
-        .arg("--working-directory")
-        .arg(dir)
-        .arg("--new-window")
-        .spawn()
-        .is_ok()
-    {
-        return;
-    }
-
-    let cmds: &[(&str, &[&str])] = &[
-        ("x-terminal-emulator", &[]),
-        ("gnome-terminal", &["--working-directory"]),
-        ("konsole", &["--workdir"]),
-        ("xfce4-terminal", &["--working-directory"]),
-        ("kitty", &["--directory"]),
-        ("alacritty", &["--working-directory"]),
-        ("wezterm", &["start", "--cwd"]),
-        ("xterm", &[]),
-    ];
-
-    for (term, args) in cmds {
-        let mut command = Command::new(term);
-
-        if args.is_empty() {
-            command.current_dir(dir);
-        } else {
-            command.args(*args).arg(dir);
-        }
-
-        if command.spawn().is_ok() {
-            return;
-        }
-    }
-
-    println!("Failed to open terminal");
-    pause();
-}
-pub fn pause() {
-    let mut pause = String::new();
-    io::stdin().read_line(&mut pause).unwrap();
 }
