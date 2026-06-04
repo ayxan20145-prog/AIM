@@ -8,6 +8,8 @@
     \/_/\/_/\/_____/ \/_/ \/_/
 ```
 
+![Example](Example.png)
+
 # AIM
 
 AIM is a lightweight terminal text editor written in Rust, inspired by Vim-style workflows. It features modal editing, command mode, and integration with **AExplorer**, a built-in terminal file explorer.
