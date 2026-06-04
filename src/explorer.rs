@@ -4,7 +4,7 @@ use crossterm::{
     event::{self, Event, KeyCode},
     execute,
     style::Print,
-    terminal::{Clear, ClearType, disable_raw_mode},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
 use std::env;
 use std::fs;
@@ -104,10 +104,14 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
                         }
                     }
                     KeyCode::Char('a') => {
+                        disable_raw_mode()?;
                         create_dir(&dir)?;
+                        enable_raw_mode()?;
                     }
                     KeyCode::Char('f') => {
+                        disable_raw_mode()?;
                         create_file(&dir)?;
+                        enable_raw_mode()?;
                     }
                     KeyCode::Char('d') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
@@ -116,22 +120,28 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
                     }
                     KeyCode::Char('c') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
+                            disable_raw_mode()?;
                             if *is_dir {
                                 copy_dir(path)?;
                             } else {
                                 copy_file(path)?;
                             }
+                            enable_raw_mode()?;
                         }
                     }
                     KeyCode::Char('m') => {
+                        disable_raw_mode()?;
                         if let Some((path, _is_dir)) = entries_list.get(selected) {
                             movee(path)?;
                         }
+                        enable_raw_mode()?;
                     }
                     KeyCode::Char('r') => {
+                        disable_raw_mode()?;
                         if let Some((path, _is_dir)) = entries_list.get(selected) {
                             rename(path)?;
                         }
+                        enable_raw_mode()?;
                     }
                     KeyCode::Char('.') => {
                         show_hidden = !show_hidden;

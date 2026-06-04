@@ -2,7 +2,7 @@ use crate::explorer;
 
 use crossterm::{
     cursor::MoveTo,
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
@@ -14,10 +14,11 @@ pub struct Cursor {
     y: u16,
 }
 
+#[derive(PartialEq)]
 pub enum Mode {
     Normal,
     Insert,
-    Open,
+    Command,
 }
 
 pub struct Editor {
@@ -25,6 +26,7 @@ pub struct Editor {
     mode: Mode,
     lines: Vec<String>,
     file_path: Option<PathBuf>,
+    command: String,
 }
 
 impl Editor {
@@ -51,6 +53,7 @@ pub fn run() -> io::Result<()> {
         mode: Mode::Normal,
         lines: vec![String::new()],
         file_path: None,
+        command: String::new(),
     };
 
     execute!(stdout(), Clear(ClearType::All))?;
@@ -67,7 +70,7 @@ pub fn run() -> io::Result<()> {
         let mode_text = match editor.mode {
             Mode::Normal => "-- NORMAL --",
             Mode::Insert => "-- INSERT --",
-            Mode::Open => "-- OPEN --",
+            Mode::Command => "",
         };
 
         execute!(stdout(), Clear(ClearType::All))?;
@@ -79,13 +82,21 @@ pub fn run() -> io::Result<()> {
 
         execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
 
-        print!("{}", mode_text);
+        if editor.mode == Mode::Command {
+            print!(":{} ", editor.command);
+        } else {
+            print!("{}", mode_text);
+        }
 
         execute!(stdout(), MoveTo(editor.cursor.x, editor.cursor.y))?;
 
         stdout().flush()?;
 
         if let Event::Key(key) = event::read()? {
+                if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    disable_raw_mode()?;
+                    break;
+                }
             match key.code {
                 KeyCode::Delete | KeyCode::Left => {
                     if editor.cursor.x > 0 {
@@ -113,9 +124,10 @@ pub fn run() -> io::Result<()> {
                 Mode::Normal => match key.code {
                     KeyCode::Insert => editor.mode = Mode::Insert,
 
-                    KeyCode::Char(' ') => editor.mode = Mode::Open,
-
-                    KeyCode::Char('q') => break,
+                    KeyCode::Char(':') => {
+                        editor.mode = Mode::Command;
+                        editor.command.clear();
+                    }
 
                     _ => {}
                 },
@@ -197,14 +209,23 @@ pub fn run() -> io::Result<()> {
 
                     _ => {}
                 },
-                Mode::Open => match key.code {
-                    KeyCode::Char('e') => {
-                        if let Some(path) = explorer::run()? {
-                            editor.lines = open_file(&path)?;
-                            editor.file_path = Some(path);
-                            editor.cursor.x = 0;
-                            editor.cursor.y = 0;
+                Mode::Command => match key.code {
+                    KeyCode::Char(c) => {
+                        editor.command.push(c);
+                    }
+
+                    KeyCode::Backspace => {
+                        editor.command.pop();
+                    }
+
+                    KeyCode::Enter => {
+                        let cmd = editor.command.trim().to_string();
+
+                        if let Err(e) = handle_command(&cmd, &mut editor) {
+                            eprintln!("Command error: {e}");
                         }
+
+                        editor.command.clear();
                         editor.mode = Mode::Normal;
                     }
 
@@ -221,4 +242,42 @@ pub fn run() -> io::Result<()> {
 fn open_file(path: &Path) -> io::Result<Vec<String>> {
     let content = std::fs::read_to_string(path)?;
     Ok(content.lines().map(|s| s.to_string()).collect())
+}
+fn handle_command(cmd: &str, editor: &mut Editor) -> io::Result<()> {
+    let parts: Vec<&str> = cmd.split_whitespace().collect();
+
+    match parts.as_slice() {
+        ["q"] => {
+            std::process::exit(0);
+        }
+
+        ["w"] => {
+            if let Some(path) = &editor.file_path {
+                let content = editor.lines.join("\n");
+                std::fs::write(path, content)?;
+            }
+        }
+
+        ["wq"] => {
+            if let Some(path) = &editor.file_path {
+                let content = editor.lines.join("\n");
+                std::fs::write(path, content)?;
+            }
+
+            std::process::exit(0);
+        }
+
+        ["Ex"] => {
+            if let Some(path) = explorer::run()? {
+                editor.lines = open_file(&path)?;
+                editor.file_path = Some(path);
+                editor.cursor.x = 0;
+                editor.cursor.y = 0;
+            }
+        }
+
+        _ => {}
+    }
+
+    Ok(())
 }
