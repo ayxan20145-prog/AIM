@@ -93,28 +93,28 @@ pub fn run() -> io::Result<()> {
         stdout().flush()?;
 
         if let Event::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
-                    disable_raw_mode()?;
-                    break;
-                }
+            if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                disable_raw_mode()?;
+                break;
+            }
             match key.code {
-                KeyCode::Delete | KeyCode::Left => {
+                KeyCode::Left => {
                     if editor.cursor.x > 0 {
                         editor.cursor.x -= 1;
                     }
                 }
 
-                KeyCode::End | KeyCode::Down => editor.cursor.y += 1,
+                KeyCode::Down => editor.cursor.y += 1,
 
-                KeyCode::Home | KeyCode::Up => {
+                KeyCode::Up => {
                     if editor.cursor.y > 0 {
                         editor.cursor.y -= 1;
                     }
                 }
 
-                KeyCode::PageDown | KeyCode::Right => editor.cursor.x += 1,
+                KeyCode::Right => editor.cursor.x += 1,
 
-                KeyCode::PageUp => editor.mode = Mode::Normal,
+                KeyCode::Esc => editor.mode = Mode::Normal,
 
                 _ => {}
             }
@@ -122,7 +122,23 @@ pub fn run() -> io::Result<()> {
 
             match editor.mode {
                 Mode::Normal => match key.code {
-                    KeyCode::Insert => editor.mode = Mode::Insert,
+                    KeyCode::Char('h') => {
+                        if editor.cursor.x > 0 {
+                            editor.cursor.x -= 1;
+                        }
+                    }
+
+                    KeyCode::Char('j') => editor.cursor.y += 1,
+
+                    KeyCode::Char('k') => {
+                        if editor.cursor.y > 0 {
+                            editor.cursor.y -= 1;
+                        }
+                    }
+
+                    KeyCode::Char('l') => editor.cursor.x += 1,
+
+                    KeyCode::Char('i') => editor.mode = Mode::Insert,
 
                     KeyCode::Char(':') => {
                         editor.mode = Mode::Command;
