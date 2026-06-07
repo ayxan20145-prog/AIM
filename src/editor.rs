@@ -9,19 +9,19 @@ use crossterm::{
 use std::io::{self, Write, stdout};
 use std::path::{Path, PathBuf};
 
-pub struct Cursor {
+struct Cursor {
     x: u16,
     y: u16,
 }
 
 #[derive(PartialEq)]
-pub enum Mode {
+enum Mode {
     Normal,
     Insert,
     Command,
 }
 
-pub struct Editor {
+struct Editor {
     cursor: Cursor,
     mode: Mode,
     lines: Vec<String>,

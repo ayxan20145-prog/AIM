@@ -184,11 +184,11 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
         }
     }
 }
-pub fn cleanup(stdout: &mut std::io::Stdout) -> io::Result<()> {
+fn cleanup(stdout: &mut std::io::Stdout) -> io::Result<()> {
     execute!(stdout, Show)?;
     Ok(())
 }
-pub fn create_dir(path: &Path) -> io::Result<()> {
+fn create_dir(path: &Path) -> io::Result<()> {
     let mut name = String::new();
 
     print!("Enter the directory name: ");
@@ -206,7 +206,7 @@ pub fn create_dir(path: &Path) -> io::Result<()> {
 
     Ok(())
 }
-pub fn create_file(path: &Path) -> io::Result<()> {
+fn create_file(path: &Path) -> io::Result<()> {
     let mut name = String::new();
 
     print!("Enter the file name: ");
@@ -234,7 +234,7 @@ pub fn create_file(path: &Path) -> io::Result<()> {
 
     Ok(())
 }
-pub fn delete(path: &Path, is_dir: bool) -> io::Result<()> {
+fn delete(path: &Path, is_dir: bool) -> io::Result<()> {
     print!(
         "Are you sure want to delete: {}? (y/n)",
         path.file_name().unwrap_or_default().to_string_lossy()
@@ -257,7 +257,7 @@ pub fn delete(path: &Path, is_dir: bool) -> io::Result<()> {
     }
     Ok(())
 }
-pub fn copy_file(path: &Path) -> io::Result<()> {
+fn copy_file(path: &Path) -> io::Result<()> {
     let mut dest = String::new();
 
     print!("Enter the destination: ");
@@ -271,7 +271,7 @@ pub fn copy_file(path: &Path) -> io::Result<()> {
 
     Ok(())
 }
-pub fn copy_dir(path: &Path) -> io::Result<()> {
+fn copy_dir(path: &Path) -> io::Result<()> {
     let mut dest = String::new();
 
     print!("Enter the destination: ");
@@ -285,7 +285,7 @@ pub fn copy_dir(path: &Path) -> io::Result<()> {
 
     Ok(())
 }
-pub fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
 
     for entry in fs::read_dir(src)? {
@@ -304,7 +304,7 @@ pub fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
 
     Ok(())
 }
-pub fn movee(path: &Path) -> io::Result<()> {
+fn movee(path: &Path) -> io::Result<()> {
     let mut dest = String::new();
 
     print!("Enter the destination: ");
@@ -318,7 +318,7 @@ pub fn movee(path: &Path) -> io::Result<()> {
 
     Ok(())
 }
-pub fn rename(path: &Path) -> io::Result<()> {
+fn rename(path: &Path) -> io::Result<()> {
     let mut name = String::new();
 
     print!("Enter the name: ");
