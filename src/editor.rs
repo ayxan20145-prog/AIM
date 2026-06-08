@@ -160,6 +160,35 @@ pub fn run() -> io::Result<()> {
                         editor.mode = Mode::Insert;
                     }
 
+                    KeyCode::Char('o') => {
+                        let y = editor.cursor.y as usize;
+
+                        while y >= editor.lines.len() {
+                            editor.lines.push(String::new());
+                        }
+
+                        editor.lines.insert(y + 1, String::new());
+
+                        editor.cursor.y += 1;
+                        editor.cursor.x = 0;
+
+                        editor.mode = Mode::Insert;
+                    }
+                    KeyCode::Char('O') => {
+                        let y = editor.cursor.y as usize;
+
+                        while y >= editor.lines.len() {
+                            editor.lines.push(String::new());
+                        }
+
+                        editor.lines.insert(y, String::new());
+
+                        editor.cursor.x = 0;
+
+                        editor.mode = Mode::Insert;
+
+                    }
+
                     _ => {}
                 },
 
