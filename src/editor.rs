@@ -144,6 +144,21 @@ pub fn run() -> io::Result<()> {
                         editor.mode = Mode::Command;
                         editor.command.clear();
                     }
+                    
+                    KeyCode::Char('a') => {
+                        editor.cursor.x += 1;
+                        editor.mode = Mode::Insert;
+                    }
+
+                    KeyCode::Char('A') => {
+                        if let Some(line) = editor.lines.get(editor.cursor.y as usize) {
+                            editor.cursor.x = line.len() as u16;
+                        } else {
+                            editor.cursor.x = 0;
+                        }
+
+                        editor.mode = Mode::Insert;
+                    }
 
                     _ => {}
                 },
