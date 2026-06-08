@@ -93,6 +93,10 @@ cargo run
 | `k` | Move up |
 | `l` | Move right |
 | `i` | Enter Insert mode |
+| `a` | Insert after the cursor |
+| `A` | Go to the end of the line and insert|
+| `o` | Add a new line below and insert |
+| `O` | Add a new line above and insert |
 | `:` | Enter Command mode |
 
 Arrow keys also work for movement.
