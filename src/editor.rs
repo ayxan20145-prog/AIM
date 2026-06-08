@@ -94,7 +94,7 @@ pub fn run() -> io::Result<()> {
 
         if let Event::Key(key) = event::read()? {
             if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
-                disable_raw_mode()?;
+                cleanup()?;
                 break;
             }
             match key.code {
@@ -279,6 +279,7 @@ fn handle_command(cmd: &str, editor: &mut Editor) -> io::Result<()> {
 
     match parts.as_slice() {
         ["q"] => {
+            cleanup()?;
             std::process::exit(0);
         }
 
@@ -294,7 +295,8 @@ fn handle_command(cmd: &str, editor: &mut Editor) -> io::Result<()> {
                 let content = editor.lines.join("\n");
                 std::fs::write(path, content)?;
             }
-
+            
+            cleanup()?;
             std::process::exit(0);
         }
 
@@ -310,5 +312,10 @@ fn handle_command(cmd: &str, editor: &mut Editor) -> io::Result<()> {
         _ => {}
     }
 
+    Ok(())
+}
+fn cleanup() -> io::Result<()> {
+    disable_raw_mode()?;
+    execute!(stdout(), Clear(ClearType::All))?;
     Ok(())
 }
