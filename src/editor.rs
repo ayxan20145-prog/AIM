@@ -6,8 +6,18 @@ use crossterm::{
     execute,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
-use std::io::{self, Write, stdout};
-use std::path::{Path, PathBuf};
+use std::{
+    io::{
+        self,
+        Write,
+        stdout
+    },
+    path::{
+        Path,
+        PathBuf
+    },
+    env
+};
 
 struct Cursor {
     x: u16,
@@ -48,6 +58,10 @@ impl Editor {
 }
 
 pub fn run() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    let file_path_arg = args.get(1).map(|s| PathBuf::from(s));
+
     let mut editor = Editor {
         cursor: Cursor { x: 0, y: 0 },
         mode: Mode::Normal,
@@ -55,6 +69,14 @@ pub fn run() -> io::Result<()> {
         file_path: None,
         command: String::new(),
     };
+
+    if let Some(path) = &file_path_arg {
+        if path.exists() {
+            editor.lines = open_file(path)?;
+        } else {
+            editor.lines = vec![String::new()]
+        }
+    }
 
     execute!(stdout(), Clear(ClearType::All))?;
 
