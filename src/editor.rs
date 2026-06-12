@@ -7,16 +7,9 @@ use crossterm::{
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
 use std::{
-    io::{
-        self,
-        Write,
-        stdout
-    },
-    path::{
-        Path,
-        PathBuf
-    },
-    env
+    env,
+    io::{self, Write, stdout},
+    path::{Path, PathBuf},
 };
 
 struct Cursor {
@@ -166,7 +159,7 @@ pub fn run() -> io::Result<()> {
                         editor.mode = Mode::Command;
                         editor.command.clear();
                     }
-                    
+
                     KeyCode::Char('a') => {
                         editor.cursor.x += 1;
                         editor.mode = Mode::Insert;
@@ -196,6 +189,7 @@ pub fn run() -> io::Result<()> {
 
                         editor.mode = Mode::Insert;
                     }
+
                     KeyCode::Char('O') => {
                         let y = editor.cursor.y as usize;
 
@@ -208,7 +202,18 @@ pub fn run() -> io::Result<()> {
                         editor.cursor.x = 0;
 
                         editor.mode = Mode::Insert;
+                    }
 
+                    KeyCode::Char('$') => {
+                        if let Some(line) = editor.lines.get(editor.cursor.y as usize) {
+                            editor.cursor.x = line.len() as u16;
+                        } else {
+                            editor.cursor.x = 0;
+                        }
+                    }
+
+                    KeyCode::Char('0') => {
+                        editor.cursor.x = 0;
                     }
 
                     _ => {}
@@ -346,7 +351,7 @@ fn handle_command(cmd: &str, editor: &mut Editor) -> io::Result<()> {
                 let content = editor.lines.join("\n");
                 std::fs::write(path, content)?;
             }
-            
+
             cleanup()?;
             std::process::exit(0);
         }
