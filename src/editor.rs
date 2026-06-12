@@ -22,6 +22,7 @@ enum Mode {
     Normal,
     Insert,
     Command,
+    Delete,
 }
 
 struct Editor {
@@ -86,6 +87,7 @@ pub fn run() -> io::Result<()> {
             Mode::Normal => "-- NORMAL --",
             Mode::Insert => "-- INSERT --",
             Mode::Command => "",
+            Mode::Delete => "",
         };
 
         execute!(stdout(), Clear(ClearType::All))?;
@@ -216,6 +218,10 @@ pub fn run() -> io::Result<()> {
                         editor.cursor.x = 0;
                     }
 
+                    KeyCode::Char('d') => {
+                        editor.mode = Mode::Delete;
+                    }
+
                     _ => {}
                 },
 
@@ -318,6 +324,24 @@ pub fn run() -> io::Result<()> {
 
                     _ => {}
                 },
+                Mode::Delete => {
+                    match key.code {
+                        KeyCode::Char('d') => {
+                            if editor.cursor.y < editor.lines.len() as u16 {
+                                editor.lines.remove(editor.cursor.y as usize);
+                            }
+
+                            if editor.lines.is_empty() {
+                                editor.lines.push(String::new());
+                            }
+
+                            editor.clamp_cursor();
+                        }
+
+                        _ => {}
+                    }
+                    editor.mode = Mode::Normal;
+                }
             }
         }
     }
