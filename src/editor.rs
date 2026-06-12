@@ -31,6 +31,7 @@ struct Editor {
     lines: Vec<String>,
     file_path: Option<PathBuf>,
     command: String,
+    scroll: u16,
 }
 
 impl Editor {
@@ -49,6 +50,13 @@ impl Editor {
             self.cursor.x = line_len as u16;
         }
     }
+    fn update_scroll(&mut self, screen_height: u16) {
+        if self.cursor.y < self.scroll {
+            self.scroll = self.cursor.y;
+        } else if self.cursor.y >= self.scroll + screen_height {
+            self.scroll = self.cursor.y - screen_height + 1;
+        }
+    }
 }
 
 pub fn run() -> io::Result<()> {
@@ -62,6 +70,7 @@ pub fn run() -> io::Result<()> {
         lines: vec![String::new()],
         file_path: None,
         command: String::new(),
+        scroll: 0,
     };
 
     if let Some(path) = &file_path_arg {
@@ -80,8 +89,10 @@ pub fn run() -> io::Result<()> {
         }
 
         let (_, rows) = size()?;
+        let text_height = rows.saturating_sub(1);
 
         editor.clamp_cursor();
+        editor.update_scroll(text_height);
 
         let mode_text = match editor.mode {
             Mode::Normal => "-- NORMAL --",
@@ -92,11 +103,17 @@ pub fn run() -> io::Result<()> {
 
         execute!(stdout(), Clear(ClearType::All))?;
 
-        for (i, line) in editor.lines.iter().enumerate() {
-            execute!(stdout(), MoveTo(0, i as u16))?;
-            print!("{}", line);
-        }
+        for screen_row in 0..text_height {
+            let file_row = editor.scroll + screen_row;
 
+            execute!(stdout(), MoveTo(0, screen_row))?;
+
+            if let Some(line) = editor.lines.get(file_row as usize) {
+                print!("{}", line);
+            } else {
+                print!("~");
+            }
+        }
         execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
 
         if editor.mode == Mode::Command {
@@ -105,7 +122,8 @@ pub fn run() -> io::Result<()> {
             print!("{}", mode_text);
         }
 
-        execute!(stdout(), MoveTo(editor.cursor.x, editor.cursor.y))?;
+        let screen_y = editor.cursor.y - editor.scroll;
+        execute!(stdout(), MoveTo(editor.cursor.x, screen_y))?;
 
         stdout().flush()?;
 
