@@ -4,7 +4,7 @@ use crossterm::{
     event::{self, Event, KeyCode},
     execute,
     style::Print,
-    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size},
 };
 use std::env;
 use std::fs;
@@ -20,12 +20,24 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
 
     let mut selected: usize = 0;
 
+    let mut scroll: usize = 0;
+
     let mut dir = env::current_dir()?;
 
     let mut show_hidden = false;
 
     loop {
+        let (_, rows) = size()?;
+
+        let visible_rows = rows.saturating_sub(2) as usize;
+
         let mut entries_list: Vec<(PathBuf, bool)> = Vec::new();
+
+        if selected < scroll {
+            scroll = selected;
+        } else if selected >= scroll + visible_rows {
+            scroll = selected - visible_rows + 1;
+        }
 
         let entries = match fs::read_dir(&dir) {
             Ok(e) => e,
@@ -59,7 +71,12 @@ pub fn run() -> io::Result<Option<std::path::PathBuf>> {
 
         execute!(stdout, Print(format!("{}\r\n", dir.display())))?;
 
-        for (i, (path, is_dir)) in entries_list.iter().enumerate() {
+        for (i, (path, is_dir)) in entries_list
+            .iter()
+            .enumerate()
+            .skip(scroll)
+            .take(visible_rows)
+        {
             let name = path.file_name().unwrap_or_default().to_string_lossy();
 
             if i == selected {
