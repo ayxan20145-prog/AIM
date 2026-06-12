@@ -98,6 +98,9 @@ cargo run
 | `o` | Add a new line below and insert |
 | `O` | Add a new line above and insert |
 | `:` | Enter Command mode |
+| `0` | Beginning of the line |
+| `$` | End of the line |
+| `d` | Enter Delete mode |
 
 Arrow keys also work for movement.
 
@@ -125,6 +128,12 @@ Enter command mode with `:`.
 | `:q` | Quit |
 | `:wq` | Save and quit |
 | `:Ex` | Open AExplorer |
+
+---
+
+| Key | Action |
+|------|---------|
+| `d` | Delete Line |
 
 ---
 
