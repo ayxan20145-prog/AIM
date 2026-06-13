@@ -102,18 +102,14 @@ pub fn run() -> io::Result<()> {
             Mode::Delete => "",
         };
 
-        execute!(stdout(), Clear(ClearType::All))?;
-
         for screen_row in 0..text_height {
             let file_row = editor.scroll + screen_row;
-
             execute!(stdout(), MoveTo(0, screen_row))?;
-
             if let Some(line) = editor.lines.get(file_row as usize) {
                 let highlighted = syntax::highlight_line(line);
-                print!("{}", highlighted);
+                print!("\x1b[K{}", highlighted);
             } else {
-                print!("~");
+                print!("\x1b[K~");
             }
         }
         execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
