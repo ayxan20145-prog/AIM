@@ -73,12 +73,13 @@ pub fn run() -> io::Result<()> {
         command: String::new(),
         scroll: 0,
     };
-
     if let Some(path) = &file_path_arg {
         if path.exists() {
             editor.lines = open_file(path)?;
+            editor.file_path = Some(path.clone());
         } else {
-            editor.lines = vec![String::new()]
+            editor.lines = vec![String::new()];
+            editor.file_path = Some(path.clone());
         }
     }
 
