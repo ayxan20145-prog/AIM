@@ -1,4 +1,5 @@
 use crate::explorer;
+use crate::syntax;
 
 use crossterm::{
     cursor::MoveTo,
@@ -109,7 +110,8 @@ pub fn run() -> io::Result<()> {
             execute!(stdout(), MoveTo(0, screen_row))?;
 
             if let Some(line) = editor.lines.get(file_row as usize) {
-                print!("{}", line);
+                let highlighted = syntax::highlight_line(line);
+                print!("{}", highlighted);
             } else {
                 print!("~");
             }
