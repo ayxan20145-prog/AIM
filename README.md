@@ -177,6 +177,8 @@ src/
 
 - crossterm
 - colored
+- once_cell
+- regex
 
 ---
 
