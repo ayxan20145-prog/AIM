@@ -8,7 +8,7 @@
     \/_/\/_/\/_____/ \/_/ \/_/
 ```
 
-![Example](Example.png)
+![Example](example.png)
 
 # AIM
 
