@@ -115,11 +115,19 @@ pub fn run() -> io::Result<()> {
         }
         execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
 
-        if editor.mode == Mode::Command {
-            print!(":{} ", editor.command);
+        let (cols, _) = size()?;
+
+        let left = if editor.mode == Mode::Command {
+            format!(":{}", editor.command)
         } else {
-            print!("{}", mode_text);
-        }
+            mode_text.to_string()
+        };
+
+        let right = format!("{}-{}", editor.cursor.y, editor.cursor.x);
+
+        let spaces = cols.saturating_sub((left.len() + right.len()) as u16) as usize;
+
+        print!("{}{}{}", left, " ".repeat(spaces), right);
 
         let screen_y = editor.cursor.y - editor.scroll;
         execute!(stdout(), MoveTo(editor.cursor.x, screen_y))?;
