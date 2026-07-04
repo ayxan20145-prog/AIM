@@ -7,6 +7,7 @@ use crossterm::{
     execute,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
+use std::fs;
 use std::{
     env,
     io::{self, Write, stdout},
@@ -61,6 +62,13 @@ impl Editor {
 }
 
 pub fn run() -> io::Result<()> {
+    let home = env::var("HOME").expect("HOME not set");
+    let path = format!("{home}/.AIMrc");
+
+    let content = fs::read_to_string(path).unwrap_or_default();
+
+    let syntax = content.contains("syntax on");
+
     let args: Vec<String> = env::args().collect();
 
     let file_path_arg = args.get(1).map(|s| PathBuf::from(s));
@@ -113,8 +121,12 @@ pub fn run() -> io::Result<()> {
             let file_row = editor.scroll + screen_row;
             execute!(stdout(), MoveTo(0, screen_row))?;
             if let Some(line) = editor.lines.get(file_row as usize) {
-                let highlighted = syntax::highlight_line(line);
-                print!("\x1b[K{}", highlighted);
+                if syntax {
+                    let highlighted = syntax::highlight_line(line);
+                    print!("\x1b[K{}", highlighted);
+                } else {
+                    print!("\x1b[K{}", line);
+                }
             } else {
                 print!("\x1b[K~");
             }
