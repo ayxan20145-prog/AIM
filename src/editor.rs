@@ -102,6 +102,12 @@ pub fn run() -> io::Result<()> {
             Mode::Command => "",
             Mode::Delete => "",
         };
+        let file_name = editor
+            .file_path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .unwrap_or("[No Name]");
 
         for screen_row in 0..text_height {
             let file_row = editor.scroll + screen_row;
@@ -123,7 +129,7 @@ pub fn run() -> io::Result<()> {
             mode_text.to_string()
         };
 
-        let right = format!("{}-{}", editor.cursor.y, editor.cursor.x);
+        let right = format!("{}-{} | {}", editor.cursor.y, editor.cursor.x, file_name);
 
         let spaces = cols.saturating_sub((left.len() + right.len()) as u16) as usize;
 
