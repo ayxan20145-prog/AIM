@@ -68,10 +68,13 @@ pub fn run() -> io::Result<()> {
     let content = fs::read_to_string(path).unwrap_or_default();
 
     let syntax = content.contains("syntax on");
+    let number = content.contains("set number");
 
     let args: Vec<String> = env::args().collect();
 
     let file_path_arg = args.get(1).map(|s| PathBuf::from(s));
+
+    let line_number_width: u16 = 5;
 
     let mut editor = Editor {
         cursor: Cursor { x: 0, y: 0 },
@@ -120,15 +123,28 @@ pub fn run() -> io::Result<()> {
         for screen_row in 0..text_height {
             let file_row = editor.scroll + screen_row;
             execute!(stdout(), MoveTo(0, screen_row))?;
-            if let Some(line) = editor.lines.get(file_row as usize) {
-                if syntax {
-                    let highlighted = syntax::highlight_line(line);
-                    print!("\x1b[K{}", highlighted);
+            if number {
+                if let Some(line) = editor.lines.get(file_row as usize) {
+                    if syntax {
+                        let highlighted = syntax::highlight_line(line);
+                        print!("\x1b[K{:>4} {}", file_row + 1, highlighted);
+                    } else {
+                        print!("\x1b[K{:>4} {}", file_row + 1, line);
+                    }
                 } else {
-                    print!("\x1b[K{}", line);
+                    print!("\x1b[K{:>4} ~", "");
                 }
             } else {
-                print!("\x1b[K~");
+                if let Some(line) = editor.lines.get(file_row as usize) {
+                    if syntax {
+                        let highlighted = syntax::highlight_line(line);
+                        print!("\x1b[K{}", highlighted);
+                    } else {
+                        print!("\x1b[K{}", line);
+                    }
+                } else {
+                    print!("\x1b[K~");
+                }
             }
         }
         execute!(stdout(), MoveTo(0, rows - 1), Clear(ClearType::CurrentLine),)?;
@@ -148,7 +164,14 @@ pub fn run() -> io::Result<()> {
         print!("{}{}{}", left, " ".repeat(spaces), right);
 
         let screen_y = editor.cursor.y - editor.scroll;
-        execute!(stdout(), MoveTo(editor.cursor.x, screen_y))?;
+        if number {
+            execute!(
+                stdout(),
+                MoveTo(editor.cursor.x + line_number_width, screen_y)
+            )?;
+        } else {
+            execute!(stdout(), MoveTo(editor.cursor.x, screen_y))?;
+        }
 
         stdout().flush()?;
 
