@@ -64,14 +64,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/aim.git
-cd aim
-```
-
-Build:
-
-```bash
-cargo build --release
+git clone https://github.com/ayxan20145-prog/AIM.git
+cd AIM
 ```
 
 Run:
