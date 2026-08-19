@@ -159,13 +159,15 @@ src/
 ├── main.rs
 ├── editor.rs
 ├── explorer.rs
-└── syntax.rs
+├── syntax.rs
+└── config.rs
 ```
 
 - `main.rs` – Application entry point
 - `editor.rs` – AIM editor implementation
 - `explorer.rs` – AExplorer file manager
 - `syntax.rs` - Syntax highliting engine
+- `config.rs` - Configturation
 
 ---
 
