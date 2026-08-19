@@ -1,5 +1,6 @@
 use std::io;
 
+mod config;
 mod editor;
 mod explorer;
 mod syntax;

@@ -1,3 +1,4 @@
+use crate::config::{NUMBER, SYNTAX};
 use crate::explorer;
 use crate::syntax;
 
@@ -7,7 +8,6 @@ use crossterm::{
     execute,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, is_raw_mode_enabled, size},
 };
-use std::fs;
 use std::{
     env,
     io::{self, Write, stdout},
@@ -62,14 +62,6 @@ impl Editor {
 }
 
 pub fn run() -> io::Result<()> {
-    let home = env::var("HOME").expect("HOME not set");
-    let path = format!("{home}/.AIMrc");
-
-    let content = fs::read_to_string(path).unwrap_or_default();
-
-    let syntax = content.contains("syntax on");
-    let number = content.contains("set number");
-
     let args: Vec<String> = env::args().collect();
 
     let file_path_arg = args.get(1).map(|s| PathBuf::from(s));
@@ -123,9 +115,9 @@ pub fn run() -> io::Result<()> {
         for screen_row in 0..text_height {
             let file_row = editor.scroll + screen_row;
             execute!(stdout(), MoveTo(0, screen_row))?;
-            if number {
+            if NUMBER {
                 if let Some(line) = editor.lines.get(file_row as usize) {
-                    if syntax {
+                    if SYNTAX {
                         let highlighted = syntax::highlight_line(line);
                         print!("\x1b[K{:>4} {}", file_row + 1, highlighted);
                     } else {
@@ -136,7 +128,7 @@ pub fn run() -> io::Result<()> {
                 }
             } else {
                 if let Some(line) = editor.lines.get(file_row as usize) {
-                    if syntax {
+                    if SYNTAX {
                         let highlighted = syntax::highlight_line(line);
                         print!("\x1b[K{}", highlighted);
                     } else {
@@ -164,7 +156,7 @@ pub fn run() -> io::Result<()> {
         print!("{}{}{}", left, " ".repeat(spaces), right);
 
         let screen_y = editor.cursor.y - editor.scroll;
-        if number {
+        if NUMBER {
             execute!(
                 stdout(),
                 MoveTo(editor.cursor.x + line_number_width, screen_y)
